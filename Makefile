@@ -23,7 +23,7 @@ BACKUP_DIR := .backup
 TARGET := clox
 
 TEST_DIR := tests
-TEST_SRCS := $(wildcard $(TEST_DIR)/*.c)
+TEST_SRCS := $(TEST_DIR)/test_main.c
 TEST_TARGET := test_clox
 
 SRCS := $(wildcard $(SRC_DIR)/*.c)
