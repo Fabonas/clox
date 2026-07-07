@@ -22,10 +22,6 @@ BUILD_DIR := .build
 BACKUP_DIR := .backup
 TARGET := clox
 
-TEST_DIR := tests
-TEST_SRCS := $(TEST_DIR)/test_main.c
-TEST_TARGET := test_clox
-
 SRCS := $(wildcard $(SRC_DIR)/*.c)
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
@@ -34,7 +30,7 @@ DEPS := $(OBJS:.o=.d)
 
 -include $(DEPS)
 
-.PHONY: all build run test debug release clean distclean backup restore clear-backup help
+.PHONY: all build run debug release clean distclean backup restore clear-backup help
 
 all: build
 
@@ -53,13 +49,6 @@ $(BUILD_DIR):
 run: build
 	./$(TARGET)
 
-test: $(TEST_TARGET)
-	./$(TEST_TARGET)
-
-$(TEST_TARGET): $(filter-out $(SRC_DIR)/main.c,$(SRCS)) $(TEST_SRCS)
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -o $@ $^
-
 
 debug:
 	$(MAKE) BUILD=debug
@@ -68,7 +57,7 @@ release:
 	$(MAKE) BUILD=release
 
 clean:
-	rm -rf $(BUILD_DIR) $(TARGET) $(TEST_TARGET)
+	rm -rf $(BUILD_DIR) $(TARGET)
 	rm -f *.o *.d
 
 distclean: clean

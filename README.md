@@ -2,7 +2,7 @@
 
 A basic C implementation of the bytecode virtual machine for the **Lox** language from [Crafting Interpreters](https://craftinginterpreters.com/) by Robert Nystrom.
 
-This repo contains the core VM foundations: chunk-based bytecode storage, constant pools, line information, a disassembler, and a small test harness.
+This repo contains the core VM foundations: chunk-based bytecode storage, constant pools, line information, and a disassembler.
 
 ## Project structure
 
@@ -15,8 +15,7 @@ This repo contains the core VM foundations: chunk-based bytecode storage, consta
 | `run.c/h` | VM execution helpers |
 | `value.c/h` | Lox value representation |
 | `main.c` | Small demo entry point |
-| `Makefile` | Build, test, and clean tasks |
-| `tests/` | Unit tests using `minunit.h` |
+| `Makefile` | Build and clean tasks |
 
 ## Building
 
@@ -40,12 +39,6 @@ make SANITIZE=1 run
 
 ```bash
 make run
-```
-
-## Testing
-
-```bash
-make test
 ```
 
 ## Cleaning up

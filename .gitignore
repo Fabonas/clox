@@ -1,7 +1,6 @@
 # Build artifacts
 .build/
 clox
-test_clox
 *.o
 *.d
 
