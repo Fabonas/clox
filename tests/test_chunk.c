@@ -1,8 +1,6 @@
 #include "../minunit.h"
 #include "../chunk.h"
 
-/* Tests for chunk.c */
-
 static const char *test_init_chunk_clears_fields(void) {
     Chunk chunk;
     initChunk(&chunk);
@@ -59,7 +57,6 @@ static const char *test_chunk_grows_when_full(void) {
     Chunk chunk;
     initChunk(&chunk);
 
-    /* Write enough bytes to force at least one growth. */
     for (int i = 0; i < 10; i++) {
         writeChunk(&chunk, OP_RETURN, i + 1);
     }

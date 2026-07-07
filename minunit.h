@@ -6,13 +6,11 @@
 #include <string.h>
 #include <math.h>
 
-/* Global test counters */
 extern int minunit_tests_run;
 extern int minunit_tests_passed;
 extern int minunit_tests_failed;
 extern const char *minunit_last_message;
 
-/* Run a single test function. If it returns NULL, it passed. */
 #define MU_RUN_TEST(test) do {                                              \
     const char *message = test();                                           \
     minunit_tests_run++;                                                    \
@@ -25,14 +23,12 @@ extern const char *minunit_last_message;
     }                                                                       \
 } while (0)
 
-/* Assert that a condition is true. */
 #define MU_ASSERT(message, test) do {                                       \
     if (!(test)) {                                                          \
         return (message);                                                   \
     }                                                                       \
 } while (0)
 
-/* Assert two integers are equal. */
 #define MU_ASSERT_INT_EQ(expected, actual) do {                             \
     int mu_expected = (expected);                                           \
     int mu_actual = (actual);                                               \
@@ -45,7 +41,6 @@ extern const char *minunit_last_message;
     }                                                                       \
 } while (0)
 
-/* Assert two unsigned 8-bit values are equal. */
 #define MU_ASSERT_UINT8_EQ(expected, actual) do {                           \
     unsigned int mu_expected = (expected);                                  \
     unsigned int mu_actual = (actual);                                      \
@@ -58,7 +53,6 @@ extern const char *minunit_last_message;
     }                                                                       \
 } while (0)
 
-/* Assert two doubles are equal within a small epsilon. */
 #define MU_ASSERT_DOUBLE_EQ(expected, actual) do {                          \
     double mu_expected = (expected);                                        \
     double mu_actual = (actual);                                            \
@@ -71,7 +65,6 @@ extern const char *minunit_last_message;
     }                                                                       \
 } while (0)
 
-/* Assert two pointers are equal. */
 #define MU_ASSERT_PTR_EQ(expected, actual) do {                             \
     const void *mu_expected = (expected);                                   \
     const void *mu_actual = (actual);                                       \
@@ -84,7 +77,6 @@ extern const char *minunit_last_message;
     }                                                                       \
 } while (0)
 
-/* Assert a pointer is NULL. */
 #define MU_ASSERT_PTR_NULL(actual) do {                                     \
     const void *mu_actual = (actual);                                       \
     if (mu_actual != NULL) {                                                \
@@ -96,7 +88,6 @@ extern const char *minunit_last_message;
     }                                                                       \
 } while (0)
 
-/* Assert a pointer is not NULL. */
 #define MU_ASSERT_PTR_NOT_NULL(actual) do {                                 \
     const void *mu_actual = (actual);                                       \
     if (mu_actual == NULL) {                                                \
@@ -108,7 +99,6 @@ extern const char *minunit_last_message;
     }                                                                       \
 } while (0)
 
-/* Print a summary of test results and exit with appropriate status. */
 #define MU_REPORT() do {                                                    \
     printf("\n");                                                           \
     printf("Tests run:    %d\n", minunit_tests_run);                         \
