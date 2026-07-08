@@ -1,8 +1,8 @@
 # clox
 
-A basic C implementation of the bytecode virtual machine for the **Lox** language from [Crafting Interpreters](https://craftinginterpreters.com/) by Robert Nystrom.
+A C implementation of the bytecode virtual machine for the **Lox** language from [Crafting Interpreters](https://craftinginterpreters.com/) by Robert Nystrom.
 
-This repo contains the core VM foundations: chunk-based bytecode storage, constant pools, line information, and a disassembler.
+This repo contains the core VM: chunk-based bytecode storage, a constant pool, line information, a disassembler, and a working stack-based interpreter.
 
 ## Project structure
 
@@ -12,10 +12,11 @@ This repo contains the core VM foundations: chunk-based bytecode storage, consta
 | `common.h` | Shared macros and configuration |
 | `debug.c/h` | Chunk disassembly helpers |
 | `memory.c/h` | Memory allocation wrappers |
-| `run.c/h` | VM execution helpers |
+| `types.h` | Common type aliases used by the VM |
 | `value.c/h` | Lox value representation |
-| `main.c` | Small demo entry point |
-| `Makefile` | Build and clean tasks |
+| `vm.c/h` | Stack-based bytecode interpreter |
+| `main.c` | Demo entry point that builds and runs a sample chunk |
+| `Makefile` | Build, run, and clean tasks |
 
 ## Building
 
@@ -40,6 +41,8 @@ make SANITIZE=1 run
 ```bash
 make run
 ```
+
+The current demo constructs a small bytecode chunk, disassembles it, and interprets it.
 
 ## Cleaning up
 
