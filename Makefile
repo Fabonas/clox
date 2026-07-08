@@ -74,8 +74,6 @@ restore:
 	fi
 	@cp $(BACKUP_DIR)/*.c $(BACKUP_DIR)/*.h $(SRC_DIR)/ 2>/dev/null || true
 	@echo "Restored source files from $(BACKUP_DIR)/"
-	@$(MAKE) clean
-	@$(MAKE) build
 
 clear-backup:
 	@rm -rf $(BACKUP_DIR)
