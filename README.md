@@ -1,55 +1,140 @@
 # clox
 
-A C implementation of the bytecode virtual machine for the **Lox** language from [Crafting Interpreters](https://craftinginterpreters.com/) by Robert Nystrom.
+A C implementation of **Lox**, the language from
+[Crafting Interpreters](https://craftinginterpreters.com/) by Robert Nystrom.
+clox is a bytecode virtual machine: it compiles Lox source to a compact
+bytecode chunk and runs it on a stack-based interpreter — the same strategy
+used by Lua, Python, and the JVM.
 
-This repo contains the core VM: chunk-based bytecode storage, a constant pool, line information, a disassembler, and a working stack-based interpreter.
+This is an educational project, worked through chapter by chapter. It
+currently implements everything through **Chapter 17 — Compiling
+Expressions**.
 
-## Project structure
+---
 
-| File(s) | Description |
-|---------|-------------|
-| `chunk.c/h` | Bytecode chunk representation and constant pool |
-| `common.h` | Shared macros and configuration |
-| `debug.c/h` | Chunk disassembly helpers |
-| `memory.c/h` | Memory allocation wrappers |
-| `types.h` | Common type aliases used by the VM |
-| `value.c/h` | Lox value representation |
-| `vm.c/h` | Stack-based bytecode interpreter |
-| `main.c` | Demo entry point that builds and runs a sample chunk |
-| `Makefile` | Build, run, and clean tasks |
+## Current state
 
-## Building
+Done (Crafting Interpreters chapters 14–17):
 
-```bash
-make
-```
+- **Scanner** (ch 16) — hand-written lexer producing a token stream.
+- **Bytecode chunks** (ch 14) — growable opcode array, a parallel array of
+  source line numbers, and a constant pool indexed by a single byte (up to
+  256 constants).
+- **Virtual machine** (ch 15) — fetch-decode-execute loop over a value stack.
+- **Compiler** (ch 17) — a single-pass Pratt parser that compiles
+  **expressions** (numbers, unary `-`, binary `+ - * /`, and parenthesized
+  grouping) into bytecode, then hands the chunk to the VM to run.
 
-Build an optimized release binary:
+Everything builds cleanly with `make` and runs. The REPL evaluates one
+expression per line.
 
-```bash
-make release
-```
+Not yet done: `print`/`var`/control-flow statements, strings, booleans,
+`nil`, functions, closures, and classes. Values are still plain `double`s.
 
-Run with AddressSanitizer / UBSan:
-
-```bash
-make SANITIZE=1 run
-```
-
-## Running
+## Quick start
 
 ```bash
-make run
-```
-
-The current demo constructs a small bytecode chunk, disassembles it, and interprets it.
-
-## Cleaning up
-
-```bash
+make                 # debug build -> ./clox
+make run             # build + launch the REPL
+./clox script.lox    # run a file
+make release         # optimized build
+make SANITIZE=1      # AddressSanitizer + UBSan
 make clean
 ```
 
+## Examples
+
+The REPL evaluates one expression per line. With debug tracing on (the
+default — see below) the VM prints a disassembly trace; the result is the
+final line:
+
+```
+$ ./clox
+> 1 + 2 * 3
+7
+> -2 * (3 + 4)
+-14
+```
+
+## Architecture
+
+```
+source text -> [scanner] -> tokens -> [compiler] -> chunk -> [VM] -> result
+```
+
+`interpret(source)` compiles the source into a `Chunk`, hands it to the VM,
+and `run()` fetches opcodes one at a time, pushing, popping, and combining
+values on the stack until `OP_RETURN` halts and prints the top value.
+
+## Project layout
+
+```
+main.c          entry point: REPL and file runner
+scanner.{c,h}   lexer: source -> tokens
+compiler.{c,h}  single-pass Pratt parser -> bytecode chunk
+chunk.{c,h}     bytecode chunk: code, line info, constant pool
+value.{c,h}     runtime Value (double) and ValueArray
+vm.{c,h}        stack-based interpreter loop
+debug.{c,h}     chunk disassembler + execution tracing
+memory.{c,h}    single reallocate() allocator + grow macros
+common.h        shared header: integer aliases, debug flags
+Makefile        build / run / release / clean / backup targets
+```
+
+## Bytecode reference
+
+| Opcode         | Operand | Stack effect      | Description              |
+|----------------|---------|-------------------|--------------------------|
+| `OP_CONSTANT`  | index   | `-> value`        | push a constant          |
+| `OP_NEGATE`    | —       | `a -> -a`         | negate the top           |
+| `OP_ADD`       | —       | `a b -> a+b`      | add                      |
+| `OP_SUBTRACT`  | —       | `a b -> a-b`      | subtract                 |
+| `OP_MULTIPLY`  | —       | `a b -> a*b`      | multiply                 |
+| `OP_DIVIDE`    | —       | `a b -> a/b`      | divide                   |
+| `OP_RETURN`    | —       | `a -> ` (prints) | pop, print, and halt     |
+
+## Debug tracing
+
+`common.h` unconditionally `#define`s `DEBUG_PRINT_CODE` and
+`DEBUG_TRACE_EXECUTION`. With tracing on, the VM prints the stack and the
+disassembly of each instruction before executing it:
+
+```
+     [ 1 ]
+0000    1 OP_CONSTANT   0 '1'
+0002    | OP_CONSTANT   1 '2'
+     [ 1 ][ 2 ]
+0006    | OP_MULTIPLY
+     [ 1 ][ 6 ]
+0007    | OP_ADD
+     [ 7 ]
+0008    2 OP_RETURN
+7
+```
+
+To silence it, comment out the two `#define`s in `common.h` and rebuild.
+(`make release` adds `-DNDEBUG` but does **not** disable tracing.)
+
+## Exit codes
+
+| Code | Meaning        |
+|------|----------------|
+| 64   | usage error    |
+| 65   | compile error  |
+| 70   | runtime error  |
+| 74   | I/O error      |
+
+## Roadmap
+
+- [x] Chunks, disassembler, and VM loop (ch 14–15)
+- [x] Scanner (ch 16)
+- [x] Compiling expressions (ch 17)
+- [ ] Types of values: bool, nil, objects, strings (ch 18–19+)
+- [ ] Statements: `print`, `var`, control flow (ch 21–23)
+- [ ] Functions, closures, and classes (ch 24–28)
+
 ## License
 
-This is a learning project based on *Crafting Interpreters*.
+Educational implementation. See
+[Crafting Interpreters](https://craftinginterpreters.com/) for its license
+and attribution terms.
