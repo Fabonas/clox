@@ -62,13 +62,13 @@ void freeVM();
 /**
  * Compile then execute `source`.
  *
- * Today only the (stub) compilation step runs; `run()` is not yet invoked.
- * Once the compiler emits a chunk this will install it on the VM and call
- * `run()`, translating its result into an `InterpretResult`.
+ * Compiles the source into a `Chunk`, installs it on the VM, and runs the
+ * fetch-decode-execute loop. Compilation failure yields
+ * `INTERPRET_COMPILE_ERROR`; a runtime type error during execution yields
+ * `INTERPRET_RUNTIME_ERROR`; otherwise `INTERPRET_OK`.
  *
  * @param `source`  NUL-terminated source text to interpret.
- * @return        `INTERPRET_OK` on success (currently always), or an error
- *                variant once compile/runtime failures are wired in.
+ * @return        The outcome of interpretation.
  */
 InterpretResult interpret(const char* source);
 

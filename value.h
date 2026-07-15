@@ -3,12 +3,15 @@
  *
  * Lox's runtime value representation.
  *
- * Lox is currently dynamically typed with a single numeric type: double
- * precision floating point. `Value` is therefore just a `double` typedef.
- * This is the simplest possible representation, used in the early chapters
- * of *Crafting Interpreters*. Later chapters replace it with a tagged union
- * to support bools, nil, objects, and so on; the `Value`/`ValueArray` API
- * here is designed so that swap can be done without touching call sites.
+ * `Value` is a tagged union: a `ValueType` tag plus a payload union holding
+ * the C value for each type Lox currently supports — `bool`, `nil`, and
+ * `number` (IEEE-754 `double`). This is the representation introduced in
+ * chapter 18 of *Crafting Interpreters*; later chapters extend the union
+ * with heap objects (strings, closures, …).
+ *
+ * A family of macros (`IS_*`/`AS_*`/`*_VAL`) wraps the common type-test,
+ * unwrap, and construction operations so call sites stay readable and the
+ * representation can evolve behind them.
  *
  * `ValueArray` is the growable array used by chunks to store their constant
  * pool and by the VM for various dynamic sequences.
@@ -17,13 +20,48 @@
 #ifndef clox_value_h
 #define clox_value_h
 
+#include <stdint.h>
+
 #include "common.h"
 
 /**
- * A Lox value. Today this is a plain IEEE-754 `double`; when richer types
- * are added this typedef will become a tagged union.
+ * The runtime type tag carried by every `Value`. One variant per Lox type
+ * supported so far.
  */
-typedef double Value;
+typedef enum {
+    VAL_BOOL,   /**< `true` / `false` */
+    VAL_NIL,    /**< the singleton `nil` value */
+    VAL_NUMBER, /**< IEEE-754 `double` */
+} ValueType;
+
+/**
+ * A Lox value: a type tag (`type`) plus a payload union (`as`) holding the
+ * underlying C value. Only the union arm matching the tag is meaningful;
+ * access the correct arm with the `AS_*` macros, never by reading `as`
+ * directly.
+ */
+typedef struct {
+    ValueType type; /**< discriminates which `as` arm is valid */
+    union {
+        bool   boolean; /**< valid when `type == VAL_BOOL` */
+        double number;  /**< valid when `type == VAL_NUMBER` (also used as a
+                         zeroed placeholder for `VAL_NIL`) */
+    } as;
+} Value;
+
+/** Type-test macros: true when `value` carries the named type. */
+#define IS_BOOL(value) ((value).type == VAL_BOOL)
+#define IS_NIL(value) ((value).type == VAL_NIL)
+#define IS_NUMBER(value) ((value).type == VAL_NUMBER)
+
+/** Unwrap macros: extract the C payload. Only call the one matching the tag. */
+#define AS_BOOL(value) ((value).as.boolean)
+#define AS_NUMBER(value) ((value).as.number)
+
+/** Construction macros: build a `Value` of the named type from a C value. */
+#define BOOL_VAL(value) ((Value){VAL_BOOL, {.boolean = value}})
+#define NIL_VAL ((Value){VAL_NIL, {.number = 0}})
+#define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}})
 
 /**
  * A growable array of `Value`s.
@@ -36,6 +74,17 @@ typedef struct {
     int    count;
     Value* values;
 } ValueArray;
+
+/**
+ * Structural value equality. Two values are equal only when their type tags
+ * match and their payloads compare equal; values of different types are
+ * always unequal (so `1 == true` is false). Used by the VM's `OP_EQUAL`.
+ *
+ * @param `a`  First value.
+ * @param `b`  Second value.
+ * @return    `true` if `a` and `b` are equal.
+ */
+bool valuesEqual(Value a, Value b);
 
 /**
  * Initialize an array to the empty, unallocated state.
@@ -62,9 +111,9 @@ void writeValueArray(ValueArray* array, Value value);
 void freeValueArray(ValueArray* array);
 
 /**
- * Print a value using `%g`, which trims trailing zeros and avoids
- * scientific notation for "small" magnitudes — giving Lox numbers a natural
- * look.
+ * Print a value's textual form: `true`/`false` for booleans, `nil` for nil,
+ * and numbers via `%g` (which trims trailing zeros and avoids scientific
+ * notation for "small" magnitudes).
  *
  * @param `value`  Value to print.
  */
