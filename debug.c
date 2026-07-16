@@ -1,5 +1,11 @@
 /**
  * @file debug.c
+ * Introduction
+ * ------------
+ * Human-readable bytecode rendering. The disassembler walks a `Chunk` and
+ * prints each instruction with its offset, source line, opcode name, and any
+ * constant-pool operand. It is used both interactively and by the VM's
+ * execution tracer.
  *
  * Chunk disassembler implementation.
  *
@@ -31,29 +37,11 @@ void disassembleChunk(Chunk* chunk, const char* name) {
     }
 }
 
-/**
- * Print the name of an operand-less opcode and advance one byte.
- *
- * @param `name`    Opcode name to print.
- * @param `offset`  Current byte offset.
- * @return        `offset + 1`.
- */
 static int simpleInstruction(const char* name, int offset) {
     printf("%s\n", name);
     return offset + 1;
 }
 
-/**
- * Print an opcode that takes a one-byte constant-pool operand.
- *
- * Shows the operand index and the constant value itself, then advances two
- * bytes (opcode + operand).
- *
- * @param `name`    Opcode name to print.
- * @param `chunk`   Chunk whose constant pool is indexed.
- * @param `offset`  Current byte offset (pointing at the opcode).
- * @return        `offset + 2`.
- */
 static int constantInstruction(const char* name, Chunk* chunk, int offset) {
     u8 constant = chunk->code[offset + 1];
     printf("%-16s %4d '", name, constant);
@@ -65,7 +53,6 @@ static int constantInstruction(const char* name, Chunk* chunk, int offset) {
 int disassembleInstruction(Chunk* chunk, int offset) {
     printf("%04d ", offset);
 
-    // Show the line number once per source line; `|` on continuation bytes.
     if (offset > 0 && chunk->lines[offset] == chunk->lines[offset - 1]) {
         printf("   | ");
     } else {

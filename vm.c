@@ -1,5 +1,10 @@
 /**
  * @file vm.c
+ * Introduction
+ * ------------
+ * The bytecode interpreter. It compiles source into a chunk, then runs a
+ * fetch-decode-execute loop against a fixed-size value stack. Runtime errors
+ * abort the current interpretation and report the offending source line.
  *
  * The bytecode interpreter loop.
  *
@@ -21,36 +26,20 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "chunk.h"
 #include "common.h"
 #include "compiler.h"
 #include "debug.h"
+#include "memory.h"
+#include "object.h"
 #include "value.h"
 
-/**
- * The single global VM instance. A global keeps the code simple and matches
- * the structure of *Crafting Interpreters*; a later phase may pass it
- * around.
- */
 VM vm;
 
-/**
- * Reset the stack to empty.
- *
- * `stackTop` points at the next free slot, so an empty stack has
- * `stackTop == &stack[0]`.
- */
 static void resetStack() { vm.stackTop = vm.stack; }
 
-/**
- * Report a runtime error: print a `printf`-style message to `stderr`
- * followed by the offending source line, then reset the stack. The caller is
- * expected to `return INTERPRET_RUNTIME_ERROR;` immediately after.
- *
- * @param `format`  `printf`-style format string.
- * @param `...`     Format arguments.
- */
 static void runtimeError(const char* format, ...) {
     va_list args;
     va_start(args, format);
@@ -67,7 +56,7 @@ static void runtimeError(const char* format, ...) {
 
 void initVM() { resetStack(); }
 
-void freeVM() {}
+void freeVM() { freeObjects(); }
 
 void push(Value value) {
     *vm.stackTop = value;
@@ -79,43 +68,32 @@ Value pop() {
     return *vm.stackTop;
 }
 
-/**
- * Peek at a value on the stack without popping it.
- *
- * @param `dist`  Distance below the top (0 is the top, 1 the one below, …).
- * @return       The value `dist` slots below the top of the stack.
- */
 static Value peek(int dist) { return vm.stackTop[-1 - dist]; }
 
-/**
- * Lox truthiness. `nil` and `false` are falsey; every other value
- * (including `0`) is truthy. Used by `OP_NOT` (and later by `and`/`or`/`if`).
- *
- * @param `value`  Value to test.
- * @return       `true` if `value` is falsey.
- */
 static bool isFalsey(Value value) {
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
 
-/**
- * The core interpreter loop.
- *
- * Uses local macros for fast instruction decoding; they are `#undef`'d at
- * the end to keep them scoped to this function.
- *
- * @return `INTERPRET_OK` when `OP_RETURN` is reached.
- */
-static InterpretResult run() {
-// Read and consume one byte of code (the next opcode or operand).
+static void concatenate() {
+    ObjString* b = AS_STRING(pop());
+    ObjString* a = AS_STRING(pop());
+
+    int   len   = a->len + b->len;
+    char* chars = ALLOCATE(char, len + 1);
+
+    memcpy(chars, a->chars, a->len);
+    memcpy(chars + a->len, b->chars, b->len);
+
+    chars[len] = '\0';
+
+    ObjString* result = takeString(chars, len);
+    push(OBJ_VAL(result));
+}
+
 #define READ_BYTE() (*vm.ip++)
-// Read a one-byte constant index and resolve it to the actual `Value`.
+
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
-// Pop `b`, pop `a`, push `valueType(a op b)`. Both operands must be numbers;
-// otherwise raise a runtime error and abort. The do/while(0) wraps it as a
-// single statement so it can be used safely inside a switch case. `valueType`
-// selects how to box the result (`NUMBER_VAL` for arithmetic, `BOOL_VAL` for
-// comparisons).
+
 #define BINARY_OP(valueType, op)                          \
     do {                                                  \
         if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
@@ -127,6 +105,7 @@ static InterpretResult run() {
         push(valueType(a op b));                          \
     } while (false)
 
+static InterpretResult run() {
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
         printf("     ");
@@ -144,10 +123,6 @@ static InterpretResult run() {
         u8 instruction;
 
         switch (instruction = READ_BYTE()) {
-            case OP_ADD:
-                BINARY_OP(NUMBER_VAL, +);
-                break;
-
             case OP_SUBTRACT:
                 BINARY_OP(NUMBER_VAL, -);
                 break;
@@ -168,8 +143,23 @@ static InterpretResult run() {
             case OP_GREATER:
                 BINARY_OP(BOOL_VAL, >);
                 break;
+
             case OP_LESS:
                 BINARY_OP(BOOL_VAL, <);
+                break;
+
+            case OP_ADD:
+                if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+                    concatenate();
+                } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
+                    double b = AS_NUMBER(pop());
+                    double a = AS_NUMBER(pop());
+
+                    push(NUMBER_VAL(a + b));
+                } else {
+                    runtimeError("Operands must be two numbers or two string.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 break;
 
             case OP_EQUAL: {
@@ -212,11 +202,10 @@ static InterpretResult run() {
             }
         }
     }
-
+}
 #undef BINARY_OP
 #undef READ_BYTE
 #undef READ_CONSTANT
-}
 
 InterpretResult interpret(const char* source) {
     Chunk chunk;

@@ -1,5 +1,10 @@
 /**
  * @file compiler.h
+ * Introduction
+ * ------------
+ * Public interface to the compiler. The rest of the interpreter does not need
+ * to know about parsers, precedence tables, or parse functions; it only needs
+ * the single `compile()` entry point that turns source text into bytecode.
  *
  * Front-end entry point: source code to bytecode.
  *
@@ -13,18 +18,9 @@
 
 #define clox_compiler_h
 
+#include "object.h"
 #include "vm.h"
 
-/**
- * Compile (currently: tokenize and print) Lox source.
- *
- * At present this initializes the scanner, reads tokens until EOF, and
- * prints them one per line for inspection — it does not emit bytecode. The
- * next development phase turns this into a real single-pass compiler that
- * emits instructions into a `Chunk`.
- *
- * @param `source`  NUL-terminated source text to compile.
- */
 bool compile(const char* source, Chunk* chunk);
 
 #endif

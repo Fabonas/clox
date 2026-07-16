@@ -1,5 +1,11 @@
 /**
  * @file scanner.c
+ * Introduction
+ * ------------
+ * The lexical scanner turns a raw Lox source string into a stream of tokens.
+ * It skips whitespace and line comments, recognizes numbers, strings,
+ * identifiers, and keywords, and reports lexical errors as special error
+ * tokens rather than aborting.
  *
  * Single-pass lexer for Lox.
  *
@@ -22,14 +28,10 @@
 
 #include "common.h"
 
-/**
- * The scanner's mutable cursor state. A single global instance is used for
- * simplicity, matching the structure of *Crafting Interpreters*.
- */
 typedef struct {
-    const char* start; /**< start of the current lexeme */
-    const char* curr;  /**< current lookahead position */
-    int         line;  /**< current 1-based line number */
+    const char* start;
+    const char* curr;
+    int         line;
 } Scanner;
 
 Scanner scanner;
@@ -40,57 +42,27 @@ void initScanner(const char* source) {
     scanner.line  = 1;
 }
 
-/**
- * @return True if `c` is a letter or underscore (identifier start/continue).
- */
 static bool isAlpha(char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_');
 }
 
-/**
- * @return True if `c` is a decimal digit.
- */
 static bool isDigit(char c) { return c >= '0' && c <= '9'; }
 
-/**
- * @return True when the cursor sits on the terminating NUL byte.
- */
 static bool isAtEnd() { return *scanner.curr == '\0'; }
 
-/**
- * Consume and return the current character, advancing the cursor.
- *
- * @return The character that was at the cursor.
- */
 static char advance() {
     scanner.curr++;
     return scanner.curr[-1];
 }
 
-/**
- * @return The current character without consuming it.
- */
 static char peek() { return *scanner.curr; }
 
-/**
- * @return The character one past the cursor (NUL at end of input).
- */
 static char peekNext() {
     if (isAtEnd()) return '\0';
 
     return scanner.curr[1];
 }
 
-/**
- * Conditionally consume an expected character.
- *
- * If the current character matches `expected`, consume it and return true;
- * otherwise leave the cursor untouched. Used to distinguish one- and
- * two-character operators (e.g. `!` vs `!=`).
- *
- * @param `expected`  Character to test for.
- * @return          True if matched and consumed, false otherwise.
- */
 static bool match(char expected) {
     if (isAtEnd()) return false;
     if (*scanner.curr != expected) return false;
@@ -99,12 +71,6 @@ static bool match(char expected) {
     return true;
 }
 
-/**
- * Build a token of `type` spanning `[start, curr)`.
- *
- * @param `type`  Category for the new token.
- * @return      Token referring to the lexeme between start and curr.
- */
 static Token makeToken(TokenType type) {
     Token token;
     token.type  = type;
@@ -115,12 +81,6 @@ static Token makeToken(TokenType type) {
     return token;
 }
 
-/**
- * Produce an error token.
- *
- * @param `message`  Static error string used in lieu of a lexeme.
- * @return         A `TOKEN_ERROR` carrying `message`.
- */
 static Token errorToken(const char* message) {
     Token token;
     token.type  = TOKEN_ERROR;
@@ -131,11 +91,6 @@ static Token errorToken(const char* message) {
     return token;
 }
 
-/**
- * Skip spaces, tabs, carriage returns, newlines, and `//` comments.
- *
- * Returns (without consuming) when the next character begins a real token.
- */
 static void skipWhitespace() {
     for (;;) {
         char c = peek();
@@ -144,25 +99,18 @@ static void skipWhitespace() {
             case ' ':
             case '\r':
             case '\t':
-
                 advance();
                 break;
             case '\n':
-
                 scanner.line++;
                 advance();
                 break;
             case '/':
-
                 if (peekNext() == '/') {
-                    // Consume to end of line (or end of input). The guard on
-                    // !isAtEnd() prevents reading past the NUL terminator when
-                    // a `//` comment is the last thing in the file.
                     while (peek() != '\n' && !isAtEnd()) advance();
                 } else {
                     return;
                 }
-
                 break;
             default:
                 return;
@@ -170,15 +118,6 @@ static void skipWhitespace() {
     }
 }
 
-/**
- * Compare the tail of the current lexeme against a keyword.
- *
- * @param `start`  Offset within the lexeme where the keyword tail begins.
- * @param `len`    Length of the keyword tail `rest`.
- * @param `rest`   Expected remaining characters of the keyword.
- * @param `type`   Token type to return on a full match.
- * @return       `type` on match, otherwise `TOKEN_IDENTIFIER`.
- */
 static TokenType checkKeyword(int start, int len, const char* rest,
                               TokenType type) {
     if (scanner.curr - scanner.start == start + len &&
@@ -189,15 +128,6 @@ static TokenType checkKeyword(int start, int len, const char* rest,
     return TOKEN_IDENTIFIER;
 }
 
-/**
- * Classify the just-scanned identifier as a keyword or plain name.
- *
- * Uses a switch on the leading character(s) as a compact trie. Any lexeme
- * that doesn't match a keyword tail falls through to the final
- * `return TOKEN_IDENTIFIER;`.
- *
- * @return The keyword `TokenType`, or `TOKEN_IDENTIFIER` for a user name.
- */
 static TokenType identifierType() {
     switch (scanner.start[0]) {
         case 'a':
@@ -250,29 +180,12 @@ static TokenType identifierType() {
     return TOKEN_IDENTIFIER;
 }
 
-/**
- * Scan an identifier (or keyword).
- *
- * The leading alpha/underscore is consumed by the caller; this consumes any
- * trailing alphanumeric characters, then classifies the whole lexeme.
- *
- * @return A `TOKEN_IDENTIFIER` or keyword `Token`.
- */
 static Token identifier() {
     while (isAlpha(peek()) || isDigit(peek())) advance();
 
     return makeToken(identifierType());
 }
 
-/**
- * Scan a numeric literal.
- *
- * One or more digits, optionally followed by a fractional part of `.` and
- * more digits. A lone trailing `.` is not consumed (it would belong to a
- * following token).
- *
- * @return A `TOKEN_NUMBER`.
- */
 static Token number() {
     while (isDigit(peek())) {
         advance();
@@ -287,15 +200,6 @@ static Token number() {
     return makeToken(TOKEN_NUMBER);
 }
 
-/**
- * Scan a string literal delimited by `"`.
- *
- * Newlines inside the string advance the line counter so error positions
- * stay correct. An unterminated string yields an error token rather than
- * consuming to EOF silently.
- *
- * @return A `TOKEN_STRING`, or `TOKEN_ERROR` if the string is unterminated.
- */
 static Token string() {
     while (peek() != '"' && !isAtEnd()) {
         if (peek() == '\n') scanner.line++;
@@ -304,7 +208,6 @@ static Token string() {
 
     if (isAtEnd()) return errorToken("Unterminated string.");
 
-    // Consume the closing quote.
     advance();
     return makeToken(TOKEN_STRING);
 }

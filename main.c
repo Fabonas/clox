@@ -1,5 +1,10 @@
 /**
  * @file main.c
+ * Introduction
+ * ------------
+ * The command-line driver. It boots the VM, then either runs an interactive
+ * REPL or reads a source file into memory and interprets it. Exit codes are
+ * chosen to match the conventions used in *Crafting Interpreters*.
  *
  * Program entry point: REPL and file execution.
  *
@@ -21,12 +26,6 @@
 #include "debug.h"
 #include "vm.h"
 
-/**
- * Read-eval-print loop.
- *
- * Each line is interpreted independently. EOF (Ctrl-D) exits cleanly. Lines
- * are limited to 1024 bytes; longer lines are truncated.
- */
 static void repl() {
     char line[1024];
     for (;;) {
@@ -41,14 +40,6 @@ static void repl() {
     }
 }
 
-/**
- * Read an entire file into a freshly allocated, NUL-terminated buffer.
- *
- * @param `path`  Path of the file to read.
- * @return      Malloc'd buffer with the file contents (caller must `free()`).
- *              Exits the process (with a diagnostic) on open/read failure or
- *              OOM.
- */
 static char* readFile(const char* path) {
     FILE* file = fopen(path, "rb");
 
@@ -79,14 +70,6 @@ static char* readFile(const char* path) {
     return buffer;
 }
 
-/**
- * Run a single source file.
- *
- * Reads the file, interprets it, and translates the result into a process
- * exit code on failure.
- *
- * @param `path`  Path of the file to run.
- */
 static void runFile(const char* path) {
     char*           source = readFile(path);
     InterpretResult result = interpret(source);

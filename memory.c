@@ -1,5 +1,10 @@
 /**
  * @file memory.c
+ * Introduction
+ * ------------
+ * Centralized dynamic memory management. Every growable array in clox routes
+ * its allocations through `reallocate()`, making this the natural place to
+ * add accounting, logging, or a future garbage collector.
  *
  * Implementation of the single allocation entry point.
  *
@@ -12,8 +17,10 @@
 
 #include <stdlib.h>
 
+#include "object.h"
+#include "vm.h"
+
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
-    // oldSize is reserved for future GC accounting; currently unused.
     (void)oldSize;
 
     if (newSize == 0) {
@@ -24,10 +31,30 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
     void* result = realloc(pointer, newSize);
 
     if (result == NULL) {
-        // No recovery path: abort so callers never see a NULL.
         exit(1);
         return NULL;
     }
 
     return result;
+}
+
+static void freeObject(Obj* obj) {
+    switch (obj->type) {
+        case OBJ_STRING: {
+            ObjString* string = (ObjString*)obj;
+            FREE_ARRAY(char, string->chars, string->len + 1);
+            FREE(ObjString, obj);
+            break;
+        }
+    }
+}
+
+void freeObjects() {
+    Obj* object = vm.objects;
+
+    while (object != NULL) {
+        Obj* next = object->next;
+        freeObject(object);
+        object = next;
+    }
 }

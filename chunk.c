@@ -1,5 +1,11 @@
 /**
  * @file chunk.c
+ * Introduction
+ * ------------
+ * This module owns the `Chunk` value type: a growable bytecode buffer paired
+ * with its constant pool and source-line metadata. Chunks are the compiler's
+ * output and the VM's input, so every byte of code and every constant flows
+ * through the functions here before execution begins.
  *
  * Bytecode chunk construction and constant pool management.
  *

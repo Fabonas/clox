@@ -1,5 +1,11 @@
 /**
  * @file common.h
+ * Introduction
+ * ------------
+ * This is the shared foundation of the entire interpreter. Every translation
+ * unit includes it first, so it is kept small and dependency-free: only the
+ * most widely used standard headers, fixed-width integer aliases, and global
+ * debug switches live here.
  *
  * Shared definitions for the entire clox codebase.
  *
@@ -21,19 +27,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/**
- * When defined, the VM prints the disassembly of every instruction it
- * executes, along with a snapshot of the value stack. Useful while debugging
- * the interpreter loop.
- */
 #define DEBUG_PRINT_CODE
 #define DEBUG_TRACE_EXECUTION
 
-/**
- * Fixed-width integer aliases. Using these keeps the bytecode and value
- * representations explicit about their sizes (opcodes are `u8`, constant
- * indices are `u8`) and avoids ambiguity with raw `int`.
- */
 typedef int8_t  i8;
 typedef uint8_t u8;
 
@@ -46,10 +42,6 @@ typedef uint32_t u32;
 typedef int64_t  i64;
 typedef uint64_t u64;
 
-/**
- * Pointer-sized integers, useful for representing object sizes and pointer
- * arithmetic without losing precision on 64-bit hosts.
- */
 typedef intptr_t  iptr;
 typedef uintptr_t uptr;
 

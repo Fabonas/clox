@@ -1,14 +1,19 @@
 /**
  * @file compiler.c
+ * Introduction
+ * ------------
+ * This is clox's single-pass expression compiler. It reads tokens from the
+ * scanner, builds a Pratt-parser table over token types, and emits bytecode
+ * into a `Chunk`. Error reporting uses panic-mode synchronization so that one
+ * mistake does not flood the user with cascading diagnostics.
  *
- * Token-stream printer (compiler front-end stub).
+ * Single-pass Pratt parser and bytecode emitter.
  *
- * At present the "compiler" does not emit any bytecode. It initializes the
- * scanner, reads tokens until EOF, and prints them one per line with their
- * source line number (a `|` is printed when consecutive tokens share a
- * line, mirroring the disassembler's style). This is a stepping stone: the
- * next development phase turns this into a real single-pass compiler that
- * emits instructions into a `Chunk`.
+ * The compiler consumes tokens from the scanner and emits instructions into
+ * a `Chunk` using a precedence-climbing expression parser. It supports
+ * literals, grouping, unary operators, and binary operators. Errors are
+ * reported with line numbers and switch the parser into panic mode to avoid
+ * cascading diagnostics.
  */
 
 #include "compiler.h"
@@ -35,15 +40,15 @@ typedef struct {
 
 typedef enum {
     PREC_NONE,
-    PREC_ASSIGNMENT,  // =
-    PREC_OR,          // or
-    PREC_AND,         // and
-    PREC_EQUALITY,    // == !=
-    PREC_COMPARISON,  // < > <= >=
-    PREC_TERM,        // + -
-    PREC_FACTOR,      // * /
-    PREC_UNARY,       // ! -
-    PREC_CALL,        // . ()
+    PREC_ASSIGNMENT,
+    PREC_OR,
+    PREC_AND,
+    PREC_EQUALITY,
+    PREC_COMPARISON,
+    PREC_TERM,
+    PREC_FACTOR,
+    PREC_UNARY,
+    PREC_CALL,
     PREC_PRIMARY
 } Precedence;
 
@@ -68,9 +73,7 @@ static void errorAt(Token* token, const char* message) {
 
     if (token->type == TOKEN_EOF) {
         fprintf(stderr, " at end");
-    } else if (token->type == TOKEN_ERROR) {
-        // Nothing
-    } else {
+    } else if (token->type != TOKEN_ERROR) {
         fprintf(stderr, " at '%.*s'", token->len, token->start);
     }
 
@@ -143,9 +146,6 @@ static ParseRule* getRule(TokenType type);
 static void       parsePrecedence(Precedence precedence);
 
 static void binary() {
-#ifdef DEBUG_PRINT_CODE
-    printf("In binary.");
-#endif
     TokenType  operatorType = parser.prev.type;
     ParseRule* rule         = getRule(operatorType);
     parsePrecedence((Precedence)(rule->precedence + 1));
@@ -212,9 +212,6 @@ static void literal() {
 }
 
 static void grouping() {
-#ifdef DEBUG_PRINT_CODE
-    printf("In grouping.");
-#endif
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression");
 }
@@ -222,17 +219,16 @@ static void grouping() {
 static void expression() { parsePrecedence(PREC_ASSIGNMENT); }
 
 static void number() {
-#ifdef DEBUG_PRINT_CODE
-    printf("In number.");
-#endif
     double value = strtod(parser.prev.start, NULL);
     emitConstant(NUMBER_VAL(value));
 }
 
+static void string() {
+    emitConstant(
+        OBJ_VAL(copyString(parser.prev.start + 1, parser.prev.len - 2)));
+}
+
 static void unary() {
-#ifdef DEBUG_PRINT_CODE
-    printf("In unary.\n");
-#endif
     TokenType operatorType = parser.prev.type;
 
     parsePrecedence(PREC_UNARY);
@@ -271,7 +267,7 @@ ParseRule rules[] = {
     [TOKEN_LESS]          = {NULL, binary, PREC_COMPARISON},
     [TOKEN_LESS_EQUAL]    = {NULL, binary, PREC_COMPARISON},
     [TOKEN_IDENTIFIER]    = {NULL, NULL, PREC_NONE},
-    [TOKEN_STRING]        = {NULL, NULL, PREC_NONE},
+    [TOKEN_STRING]        = {string, NULL, PREC_NONE},
     [TOKEN_NUMBER]        = {number, NULL, PREC_NONE},
     [TOKEN_AND]           = {NULL, NULL, PREC_NONE},
     [TOKEN_CLASS]         = {NULL, NULL, PREC_NONE},

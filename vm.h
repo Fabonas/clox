@@ -1,5 +1,10 @@
 /**
  * @file vm.h
+ * Introduction
+ * ------------
+ * Public interface to the virtual machine. Outside code initializes the VM,
+ * pushes values if needed, and calls `interpret()` to compile and run a
+ * program.
  *
  * The stack-based bytecode virtual machine.
  *
@@ -19,71 +24,32 @@
 #include "common.h"
 #include "value.h"
 
-/**
- * Maximum number of values that can live on the stack at once. A fixed-size
- * stack keeps allocation out of the hot path; exceeding it is a (future)
- * runtime error.
- */
 #define STACK_MAX 256
 
-/**
- * The interpreter's runtime state.
- */
 typedef struct {
-    Chunk* chunk;             /**< bytecode currently being executed */
-    u8*    ip;                /**< instruction pointer into `chunk->code` */
-    Value  stack[STACK_MAX];  /**< the value stack */
-    Value* stackTop;          /**< points just past the top value */
+    Chunk* chunk;
+    u8*    ip;
+    Value  stack[STACK_MAX];
+    Value* stackTop;
+    Obj*   objects;
 } VM;
 
-/**
- * Outcome of interpreting a program. `INTERPRET_OK` means success; the two
- * error variants distinguish front-end (compile) and back-end (runtime)
- * failures.
- */
 typedef enum {
-    INTERPRET_OK,             /**< program ran successfully */
-    INTERPRET_COMPILE_ERROR,  /**< compilation failed */
-    INTERPRET_RUNTIME_ERROR,  /**< execution failed at runtime */
+    INTERPRET_OK,
+    INTERPRET_COMPILE_ERROR,
+    INTERPRET_RUNTIME_ERROR,
 } InterpretResult;
 
-/**
- * Initialize the VM's runtime state (resets the stack).
- */
+extern VM vm;
+
 void initVM();
 
-/**
- * Tear down VM state.
- *
- * Nothing to clean up yet; reserved for future GC/object teardown.
- */
 void freeVM();
 
-/**
- * Compile then execute `source`.
- *
- * Compiles the source into a `Chunk`, installs it on the VM, and runs the
- * fetch-decode-execute loop. Compilation failure yields
- * `INTERPRET_COMPILE_ERROR`; a runtime type error during execution yields
- * `INTERPRET_RUNTIME_ERROR`; otherwise `INTERPRET_OK`.
- *
- * @param `source`  NUL-terminated source text to interpret.
- * @return        The outcome of interpretation.
- */
 InterpretResult interpret(const char* source);
 
-/**
- * Push a value onto the stack.
- *
- * @param `value`  Value to push.
- */
 void push(Value value);
 
-/**
- * Pop and return the top value from the stack.
- *
- * @return The value that was on top of the stack.
- */
 Value pop();
 
 #endif

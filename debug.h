@@ -1,5 +1,10 @@
 /**
  * @file debug.h
+ * Introduction
+ * ------------
+ * Public disassembler interface. Debugging a bytecode interpreter is much
+ * easier when you can see the instruction stream; these two functions produce
+ * the formatted views used by the rest of the tool chain.
  *
  * Bytecode disassembly helpers.
  *
@@ -15,30 +20,8 @@
 
 #include "chunk.h"
 
-/**
- * Disassemble an entire chunk.
- *
- * Prints a `== name ==` header, then every instruction in order. The loop
- * advances `offset` past operands by reassigning it to the return value of
- * `disassembleInstruction()`.
- *
- * @param `chunk`  Chunk to dump.
- * @param `name`   Label printed in the header line.
- */
 void disassembleChunk(Chunk* chunk, const char* name);
 
-/**
- * Disassemble the single instruction at `offset`.
- *
- * Prints the byte offset, source line (or `|` for continuation), opcode
- * name, and operand detail, then returns the offset of the next instruction
- * (offset + 1 for operand-less opcodes, +2 for those with a one-byte
- * operand).
- *
- * @param `chunk`   Chunk containing the instruction.
- * @param `offset`  Byte offset of the instruction to disassemble.
- * @return        Byte offset of the following instruction.
- */
 int disassembleInstruction(Chunk* chunk, int offset);
 
 #endif
