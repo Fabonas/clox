@@ -36,6 +36,7 @@
 #include "value.h"
 
 typedef enum {
+<<<<<<< HEAD
     OP_CONSTANT,
     OP_NIL,
     OP_TRUE,
@@ -50,6 +51,22 @@ typedef enum {
     OP_MULTIPLY,
     OP_DIVIDE,
     OP_NOT,
+=======
+    OP_CONSTANT, /**< push `constants[index]` (index in next byte) */
+    OP_NIL,      /**< push `nil` */
+    OP_TRUE,     /**< push `true` */
+    OP_FALSE,    /**< push `false` */
+    OP_EQUAL,    /**< pop `b`, pop `a`, push `a == b` */
+    OP_GREATER,  /**< pop `b`, pop `a`, push `a > b` */
+    OP_LESS,     /**< pop `b`, pop `a`, push `a < b` */
+    OP_RETURN,   /**< pop and print the top of the stack, halt execution */
+    OP_NEGATE,   /**< pop `a`, push `-a` */
+    OP_ADD,      /**< pop `b`, pop `a`, push `a + b` */
+    OP_SUBTRACT, /**< pop `b`, pop `a`, push `a - b` */
+    OP_MULTIPLY, /**< pop `b`, pop `a`, push `a * b` */
+    OP_DIVIDE,   /**< pop `b`, pop `a`, push `a / b` */
+    OP_NOT,      /**< pop `a`, push `!a` (true if `a` is falsey) */
+>>>>>>> 14ae8ba (Implemented Chapter 18: Types of Values)
 } OpCode;
 
 typedef struct {

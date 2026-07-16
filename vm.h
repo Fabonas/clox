@@ -46,6 +46,20 @@ void initVM();
 
 void freeVM();
 
+<<<<<<< HEAD
+=======
+/**
+ * Compile then execute `source`.
+ *
+ * Compiles the source into a `Chunk`, installs it on the VM, and runs the
+ * fetch-decode-execute loop. Compilation failure yields
+ * `INTERPRET_COMPILE_ERROR`; a runtime type error during execution yields
+ * `INTERPRET_RUNTIME_ERROR`; otherwise `INTERPRET_OK`.
+ *
+ * @param `source`  NUL-terminated source text to interpret.
+ * @return        The outcome of interpretation.
+ */
+>>>>>>> 14ae8ba (Implemented Chapter 18: Types of Values)
 InterpretResult interpret(const char* source);
 
 void push(Value value);

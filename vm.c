@@ -40,6 +40,17 @@ VM vm;
 
 static void resetStack() { vm.stackTop = vm.stack; }
 
+<<<<<<< HEAD
+=======
+/**
+ * Report a runtime error: print a `printf`-style message to `stderr`
+ * followed by the offending source line, then reset the stack. The caller is
+ * expected to `return INTERPRET_RUNTIME_ERROR;` immediately after.
+ *
+ * @param `format`  `printf`-style format string.
+ * @param `...`     Format arguments.
+ */
+>>>>>>> 14ae8ba (Implemented Chapter 18: Types of Values)
 static void runtimeError(const char* format, ...) {
     va_list args;
     va_start(args, format);
@@ -68,12 +79,31 @@ Value pop() {
     return *vm.stackTop;
 }
 
+<<<<<<< HEAD
 static Value peek(int dist) { return vm.stackTop[-1 - dist]; }
 
+=======
+/**
+ * Peek at a value on the stack without popping it.
+ *
+ * @param `dist`  Distance below the top (0 is the top, 1 the one below, …).
+ * @return       The value `dist` slots below the top of the stack.
+ */
+static Value peek(int dist) { return vm.stackTop[-1 - dist]; }
+
+/**
+ * Lox truthiness. `nil` and `false` are falsey; every other value
+ * (including `0`) is truthy. Used by `OP_NOT` (and later by `and`/`or`/`if`).
+ *
+ * @param `value`  Value to test.
+ * @return       `true` if `value` is falsey.
+ */
+>>>>>>> 14ae8ba (Implemented Chapter 18: Types of Values)
 static bool isFalsey(Value value) {
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
 
+<<<<<<< HEAD
 static void concatenate() {
     ObjString* b = AS_STRING(pop());
     ObjString* a = AS_STRING(pop());
@@ -90,10 +120,30 @@ static void concatenate() {
     push(OBJ_VAL(result));
 }
 
+=======
+/**
+ * The core interpreter loop.
+ *
+ * Uses local macros for fast instruction decoding; they are `#undef`'d at
+ * the end to keep them scoped to this function.
+ *
+ * @return `INTERPRET_OK` when `OP_RETURN` is reached.
+ */
+static InterpretResult run() {
+// Read and consume one byte of code (the next opcode or operand).
+>>>>>>> 14ae8ba (Implemented Chapter 18: Types of Values)
 #define READ_BYTE() (*vm.ip++)
 
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+<<<<<<< HEAD
 
+=======
+// Pop `b`, pop `a`, push `valueType(a op b)`. Both operands must be numbers;
+// otherwise raise a runtime error and abort. The do/while(0) wraps it as a
+// single statement so it can be used safely inside a switch case. `valueType`
+// selects how to box the result (`NUMBER_VAL` for arithmetic, `BOOL_VAL` for
+// comparisons).
+>>>>>>> 14ae8ba (Implemented Chapter 18: Types of Values)
 #define BINARY_OP(valueType, op)                          \
     do {                                                  \
         if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
@@ -123,6 +173,13 @@ static InterpretResult run() {
         u8 instruction;
 
         switch (instruction = READ_BYTE()) {
+<<<<<<< HEAD
+=======
+            case OP_ADD:
+                BINARY_OP(NUMBER_VAL, +);
+                break;
+
+>>>>>>> 14ae8ba (Implemented Chapter 18: Types of Values)
             case OP_SUBTRACT:
                 BINARY_OP(NUMBER_VAL, -);
                 break;
@@ -143,11 +200,15 @@ static InterpretResult run() {
             case OP_GREATER:
                 BINARY_OP(BOOL_VAL, >);
                 break;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 14ae8ba (Implemented Chapter 18: Types of Values)
             case OP_LESS:
                 BINARY_OP(BOOL_VAL, <);
                 break;
 
+<<<<<<< HEAD
             case OP_ADD:
                 if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
                     concatenate();
@@ -162,6 +223,8 @@ static InterpretResult run() {
                 }
                 break;
 
+=======
+>>>>>>> 14ae8ba (Implemented Chapter 18: Types of Values)
             case OP_EQUAL: {
                 Value b = pop();
                 Value a = pop();
