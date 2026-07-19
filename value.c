@@ -57,13 +57,10 @@ void printValue(Value value) {
         case VAL_NUMBER:
             printf("%g", AS_NUMBER(value));
             break;
-<<<<<<< HEAD
 
         case VAL_OBJ:
             printObject(value);
             break;
-=======
->>>>>>> 14ae8ba (Implemented Chapter 18: Types of Values)
     }
 }
 
@@ -80,22 +77,10 @@ bool valuesEqual(Value a, Value b) {
         case VAL_NUMBER:
             return AS_NUMBER(a) == AS_NUMBER(b);
 
-<<<<<<< HEAD
-        case VAL_OBJ: {
-            ObjString* aString = AS_STRING(a);
-            ObjString* bString = AS_STRING(b);
-
-            return aString->len == bString->len &&
-                   memcmp(aString->chars, bString->chars, aString->len) == 0;
-        }
+        case VAL_OBJ:
+            return AS_OBJ(a) == AS_OBJ(b);
 
         default:
             return false;
     }
 }
-=======
-        default:
-            return false;
-    }
-}
->>>>>>> 14ae8ba (Implemented Chapter 18: Types of Values)

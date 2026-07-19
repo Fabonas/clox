@@ -221,7 +221,6 @@ static void expression() { parsePrecedence(PREC_ASSIGNMENT); }
 static void number() {
     double value = strtod(parser.prev.start, NULL);
     emitConstant(NUMBER_VAL(value));
-<<<<<<< HEAD
 }
 
 static void string() {
@@ -230,14 +229,6 @@ static void string() {
 }
 
 static void unary() {
-=======
-}
-
-static void unary() {
-#ifdef DEBUG_PRINT_CODE
-    printf("In unary.\n");
-#endif
->>>>>>> 14ae8ba (Implemented Chapter 18: Types of Values)
     TokenType operatorType = parser.prev.type;
 
     parsePrecedence(PREC_UNARY);

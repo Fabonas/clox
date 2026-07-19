@@ -22,6 +22,7 @@
 
 #include "chunk.h"
 #include "common.h"
+#include "table.h"
 #include "value.h"
 
 #define STACK_MAX 256
@@ -31,6 +32,7 @@ typedef struct {
     u8*    ip;
     Value  stack[STACK_MAX];
     Value* stackTop;
+    Table  strings;
     Obj*   objects;
 } VM;
 
@@ -46,8 +48,6 @@ void initVM();
 
 void freeVM();
 
-<<<<<<< HEAD
-=======
 /**
  * Compile then execute `source`.
  *
@@ -59,7 +59,6 @@ void freeVM();
  * @param `source`  NUL-terminated source text to interpret.
  * @return        The outcome of interpretation.
  */
->>>>>>> 14ae8ba (Implemented Chapter 18: Types of Values)
 InterpretResult interpret(const char* source);
 
 void push(Value value);
