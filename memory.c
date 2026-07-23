@@ -10,7 +10,9 @@
  *
  * All dynamic memory in clox flows through `reallocate()`. Centralizing
  * allocation here means a future garbage collector or allocation profiler
- * can be wired in by changing this one function.
+ * can be wired in by changing this one function. `freeObjects()` walks the
+ * VM's object list and frees every heap object; today only `ObjString` is
+ * supported.
  */
 
 #include "memory.h"

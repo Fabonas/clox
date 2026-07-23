@@ -1,3 +1,24 @@
+/**
+ * @file table.c
+ * Introduction
+ * ------------
+ * Hash table implementation used for global variables and string interning.
+ * It is an open-addressed table with linear probing, FNV-1a hashing for
+ * string keys, and tombstones to keep probes working after deletion.
+ *
+ * Hash table with linear probing and string interning support.
+ *
+ * The table stores `Entry` values keyed by `ObjString*`. Lookups use the
+ * precomputed string hash and, on collision, walk forward with wraparound
+ * until they find the key, a truly empty slot, or exhaust the table.
+ * Tombstones (`key == NULL`, non-nil value) record previously deleted keys
+ * so that probe chains remain intact.
+ *
+ * `tableFindString()` lets `object.c` intern strings: before allocating a
+ * new `ObjString`, the caller searches the `vm.strings` table for an
+ * existing string with the same characters and hash.
+ */
+
 #include "table.h"
 
 #include <assert.h>

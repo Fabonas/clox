@@ -9,9 +9,11 @@
  * The stack-based bytecode virtual machine.
  *
  * The VM owns a value stack (a fixed-size array used as a stack via a
- * `stackTop` pointer) and, while executing, references the current `Chunk`
- * and an instruction pointer (`ip`) into that chunk's code. Execution is a
- * simple fetch-decode-execute loop implemented in `vm.c`'s `run()`.
+ * `stackTop` pointer), two hash tables (`globals` for global variables and
+ * `strings` for interned strings), and a linked list of all allocated heap
+ * objects. While executing, it references the current `Chunk` and an
+ * instruction pointer (`ip`) into that chunk's code. Execution is a simple
+ * fetch-decode-execute loop implemented in `vm.c`'s `run()`.
  *
  * The public API is tiny: init/free the VM, interpret a source string, and
  * push/pop values onto the stack.

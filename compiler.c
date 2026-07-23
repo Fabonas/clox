@@ -11,9 +11,12 @@
  *
  * The compiler consumes tokens from the scanner and emits instructions into
  * a `Chunk` using a precedence-climbing expression parser. It supports
- * literals, grouping, unary operators, and binary operators. Errors are
- * reported with line numbers and switch the parser into panic mode to avoid
- * cascading diagnostics.
+ * literals, grouping, unary and binary operators, `print` and expression
+ * statements, `var` declarations, and brace-delimited blocks with local
+ * variable scope. Variables are resolved at compile time: locals are
+ * assigned stack slots and globals are referenced by name through the
+ * constant pool. Errors are reported with line numbers and switch the
+ * parser into panic mode to avoid cascading diagnostics.
  */
 
 #include "compiler.h"

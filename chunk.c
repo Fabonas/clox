@@ -11,7 +11,8 @@
  *
  * These functions let the compiler emit code byte-by-byte while transparently
  * growing the code and lines buffers, and let it intern constants into the
- * pool, receiving back the single-byte index used by `OP_CONSTANT`.
+ * pool, receiving back the single-byte index used by `OP_CONSTANT` and by
+ * global-variable opcodes.
  */
 
 #include "chunk.h"

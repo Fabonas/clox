@@ -9,9 +9,11 @@
  * Heap object type system.
  *
  * All heap objects share a leading `Obj` header that stores the object's
- * runtime type tag. Concrete object types such as `ObjString` embed this
- * header as their first member, allowing a `Value`'s `Obj*` payload to be
- * cast to the appropriate subtype once its type has been checked.
+ * runtime type tag and a `next` pointer for the VM's object list. Concrete
+ * object types such as `ObjString` embed this header as their first member,
+ * allowing a `Value`'s `Obj*` payload to be cast to the appropriate subtype
+ * once its type has been checked. Strings also store their length and a
+ * precomputed hash so they can be used as hash-table keys.
  */
 
 #ifndef clox_object_h

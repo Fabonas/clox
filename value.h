@@ -9,10 +9,10 @@
  * Lox's runtime value representation.
  *
  * `Value` is a tagged union: a `ValueType` tag plus a payload union holding
- * the C value for each type Lox currently supports — `bool`, `nil`, and
- * `number` (IEEE-754 `double`). This is the representation introduced in
- * chapter 18 of *Crafting Interpreters*; later chapters extend the union
- * with heap objects (strings, closures, …).
+ * the C value for each type Lox currently supports — `bool`, `nil`,
+ * `number` (IEEE-754 `double`), and heap `Obj*` pointers. Chapters 18–19 of
+ * *Crafting Interpreters* build this representation; chapter 22 uses it for
+ * local variables stored directly on the VM stack.
  *
  * A family of macros (`IS_*`/`AS_*`/`*_VAL`) wraps the common type-test,
  * unwrap, and construction operations so call sites stay readable and the

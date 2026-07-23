@@ -8,10 +8,10 @@
  *
  * Front-end entry point: source code to bytecode.
  *
- * The compiler turns a source string into bytecode in a chunk. Today this
- * is a placeholder that only tokenizes the source and prints the token
- * stream for inspection; it does not yet emit instructions. The VM's
- * `interpret()` calls `compile()` and currently assumes success.
+ * The compiler turns a source string into bytecode in a chunk. It implements a
+ * single-pass Pratt parser (chapter 17) that compiles expressions, statements,
+ * and variable declarations (chapters 21–22). On success the chunk is ready for
+ * the VM; on failure it returns `false` and the caller discards the chunk.
  */
 
 #ifndef clox_compiler_h

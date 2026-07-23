@@ -13,6 +13,8 @@
  *   * one argument   -> run the given file as the program source
  *   * anything else  -> print usage and exit 64
  *
+ * The REPL reads whole statements per line; use `;` and `{}` when needed.
+ *
  * Exit codes follow the Unix convention: 64 for usage errors, 65 for compile
  * errors, 70 for runtime errors (mirroring *Crafting Interpreters*).
  */

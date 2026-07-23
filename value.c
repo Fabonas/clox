@@ -10,7 +10,9 @@
  *
  * `ValueArray` is a thin wrapper around the `memory.h` growth macros. The
  * chunk module uses it to store the constant pool: every `OP_CONSTANT`
- * instruction indexes into a `ValueArray` by a single-byte index.
+ * instruction indexes into a `ValueArray` by a single-byte index. Value
+ * printing delegates heap objects to `object.c` and equality compares
+ * objects by identity.
  */
 
 #include "value.h"

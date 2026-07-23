@@ -18,7 +18,9 @@
  * ```
  *
  * The line column shows the source line for the first instruction on a line
- * and `|` for subsequent instructions sharing that line.
+ * and `|` for subsequent instructions sharing that line. Instructions with
+ * a constant-pool operand display the constant value; local-variable
+ * instructions display the stack slot.
  */
 
 #include "debug.h"

@@ -8,10 +8,12 @@
  *
  * Heap object implementations.
  *
- * Object headers are allocated through `allocateObject()`, which sizes the *
+ * Object headers are allocated through `allocateObject()`, which sizes the
  * allocation for the concrete object type and tags it. Strings are built by
  * copying their payload into a fresh heap buffer and wrapping it in an
- * `ObjString`.
+ * `ObjString`. Every created string is interned in `vm.strings` so that
+ * identical string literals and concatenation results share a single
+ * `ObjString` instance.
  */
 
 #include "object.h"

@@ -12,15 +12,15 @@
  * A `Chunk` is the compiled output the VM executes. It holds three parallel
  * arrays of equal length:
  *
- *   * `code`      — the raw bytecode, a sequence of opcodes (and, for some
- *                    opcodes, a trailing operand byte that indexes the
- *                    constant pool).
+ *   * `code`      — the raw bytecode, a sequence of opcodes (and, for some,
+ *                    trailing operand bytes that index the constant pool or
+ *                    name a local stack slot).
  *   * `lines`     — the source line number for each byte of code, used only
  *                    by the disassembler to attribute instructions to source
  *                    lines. Keeping it separate from `code` keeps the hot
  *                    interpreter loop cache-friendly.
- *   * `constants` — the constant pool (a `ValueArray`). `OP_CONSTANT` refers
- *                    to entries here by index.
+ *   * `constants` — the constant pool (a `ValueArray`). `OP_CONSTANT` and
+ *                    global-variable opcodes refer to entries here by index.
  *
  * `count`/`capacity` use the standard growable-array pattern from
  * `memory.h`.

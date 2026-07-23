@@ -12,7 +12,11 @@
  * reads one opcode byte from the chunk (via `READ_BYTE`) and dispatches on
  * it. Most opcodes operate on the value stack: `OP_CONSTANT` pushes, the
  * arithmetic/comparison opcodes pop two and push one, `OP_NEGATE` and
- * `OP_NOT` pop and push, and `OP_RETURN` pops and prints before halting.
+ * `OP_NOT` pop and push, and `OP_RETURN` halts. Variable opcodes read and
+ * write locals by stack slot (`OP_GET_LOCAL`/`OP_SET_LOCAL`) or globals via
+ * the `vm.globals` hash table (`OP_GET_GLOBAL`, `OP_DEFINE_GLOBAL`,
+ * `OP_SET_GLOBAL`). `OP_PRINT` pops a value and prints it.
+ *
  * Operand types are checked at runtime; a mismatch raises a runtime error
  * via `runtimeError()` and aborts interpretation.
  *
