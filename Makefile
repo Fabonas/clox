@@ -19,7 +19,8 @@ endif
 
 SRC_DIR := .
 BUILD_DIR := .build
-BACKUP_DIR := .backup
+BACKUP_ROOT := .backup
+BACKUP_DIR := $(BACKUP_ROOT)
 TARGET := clox
 
 SRCS := $(wildcard $(SRC_DIR)/*.c)
@@ -30,7 +31,7 @@ DEPS := $(OBJS:.o=.d)
 
 -include $(DEPS)
 
-.PHONY: all build run debug release clean distclean backup restore clear-backup help
+.PHONY: all build run debug release clean distclean backup restore list-backups clear-backup help
 
 all: build
 
@@ -62,6 +63,10 @@ clean:
 
 distclean: clean
 
+ifdef NAME
+BACKUP_DIR := $(BACKUP_ROOT)/$(NAME)
+endif
+
 backup:
 	@mkdir -p $(BACKUP_DIR)
 	@cp $(SRC_DIR)/*.c $(SRC_DIR)/*.h $(BACKUP_DIR)/
@@ -74,6 +79,24 @@ restore:
 	fi
 	@cp $(BACKUP_DIR)/*.c $(BACKUP_DIR)/*.h $(SRC_DIR)/ 2>/dev/null || true
 	@echo "Restored source files from $(BACKUP_DIR)/"
+
+list-backups:
+	@if [ ! -d "$(BACKUP_ROOT)" ]; then \
+		echo "No backup directory found"; \
+		exit 0; \
+	fi
+	@echo "Named backups in $(BACKUP_ROOT)/:"
+	@found=0; \
+	for entry in $(BACKUP_ROOT)/*; do \
+		if [ -d "$$entry" ]; then \
+			found=1; \
+			echo "  $$(basename $$entry)"; \
+		fi; \
+	done; \
+	if [ $$found -eq 0 ]; then \
+		echo "  (none)"; \
+	fi
+	@echo "Default unnamed backup: $(BACKUP_ROOT)/"
 
 clear-backup:
 	@rm -rf $(BACKUP_DIR)
@@ -91,8 +114,11 @@ help:
 	@echo "  clean     Remove build directory and executable"
 	@echo "  distclean Same as clean"
 	@echo "  backup    Save a copy of all .c/.h files to $(BACKUP_DIR)/"
-	@echo "  restore   Restore source files from $(BACKUP_DIR)/ and rebuild"
-	@echo "  clear-backup Remove the backup directory"
+	@echo "            Use NAME=<name> to create a named backup in $(BACKUP_ROOT)/<name>/"
+	@echo "  restore   Restore source files from $(BACKUP_DIR)/"
+	@echo "            Use NAME=<name> to restore from $(BACKUP_ROOT)/<name>/"
+	@echo "  list-backups List all named backups"
+	@echo "  clear-backup Remove the backup directory (or NAME=<name> for a named one)"
 	@echo "  help      Show this help message"
 	@echo ""
 	@echo "Variables:"

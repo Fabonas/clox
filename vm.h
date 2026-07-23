@@ -28,12 +28,13 @@
 #define STACK_MAX 256
 
 typedef struct {
-    Chunk* chunk;
-    u8*    ip;
+    Chunk *chunk;
+    u8    *ip;
     Value  stack[STACK_MAX];
-    Value* stackTop;
+    Value *stackTop;
+    Table  globals;
     Table  strings;
-    Obj*   objects;
+    Obj   *objects;
 } VM;
 
 typedef enum {
@@ -59,7 +60,7 @@ void freeVM();
  * @param `source`  NUL-terminated source text to interpret.
  * @return        The outcome of interpretation.
  */
-InterpretResult interpret(const char* source);
+InterpretResult interpret(const char *source);
 
 void push(Value value);
 

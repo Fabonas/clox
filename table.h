@@ -5,21 +5,25 @@
 #include "value.h"
 
 typedef struct {
-    ObjString* key;
+    ObjString *key;
     Value      value;
 } Entry;
 
 typedef struct {
     int    count;
     int    capacity;
-    Entry* entries;
+    Entry *entries;
 } Table;
 
-void initTable(Table* table);
-void freeTable(Table* table);
-bool tableGet(Table* table, ObjString* key, Value* value);
-bool tableSet(Table* table, ObjString* key, Value value);
-bool tableDelete(Table* table, ObjString* key);
-void tableAddAll(Table* from, Table* to);
+void       initTable(Table *table);
+void       freeTable(Table *table);
+bool       tableGet(Table *table, ObjString *key, Value *value);
+bool       tableOverwrite(Table *table, ObjString *key, Value value);
+bool       tableContains(Table *table, ObjString *key);
+Entry     *tableGetEntry(Table *table, ObjString *key);
+bool       tableSet(Table *table, ObjString *key, Value value);
+bool       tableDelete(Table *table, ObjString *key);
+void       tableAddAll(Table *from, Table *to);
+ObjString *tableFindString(Table *table, const char *chars, int len, u32 hash);
 
 #endif

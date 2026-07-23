@@ -41,7 +41,7 @@ VM vm;
 
 static void resetStack() { vm.stackTop = vm.stack; }
 
-static void runtimeError(const char* format, ...) {
+static void runtimeError(const char *format, ...) {
     va_list args;
     va_start(args, format);
     vfprintf(stderr, format, args);
@@ -58,11 +58,14 @@ static void runtimeError(const char* format, ...) {
 void initVM() {
     resetStack();
     vm.objects = NULL;
+
+    initTable(&vm.globals);
     initTable(&vm.strings);
 }
 
 void freeVM() {
     freeTable(&vm.strings);
+    freeTable(&vm.globals);
     freeObjects();
 }
 
@@ -83,24 +86,26 @@ static bool isFalsey(Value value) {
 }
 
 static void concatenate() {
-    ObjString* b = AS_STRING(pop());
-    ObjString* a = AS_STRING(pop());
+    ObjString *b = AS_STRING(pop());
+    ObjString *a = AS_STRING(pop());
 
     int   len   = a->len + b->len;
-    char* chars = ALLOCATE(char, len + 1);
+    char *chars = ALLOCATE(char, len + 1);
 
     memcpy(chars, a->chars, a->len);
     memcpy(chars + a->len, b->chars, b->len);
 
     chars[len] = '\0';
 
-    ObjString* result = takeString(chars, len);
+    ObjString *result = takeString(chars, len);
     push(OBJ_VAL(result));
 }
 
 #define READ_BYTE() (*vm.ip++)
 
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+
+#define READ_STRING() AS_STRING(READ_CONSTANT())
 
 #define BINARY_OP(valueType, op)                          \
     do {                                                  \
@@ -118,7 +123,7 @@ static InterpretResult run() {
 #ifdef DEBUG_TRACE_EXECUTION
         printf("     ");
 
-        for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
+        for (Value *slot = vm.stack; slot < vm.stackTop; slot++) {
             printf("[ ");
             printValue(*slot);
             printf(" ]");
@@ -138,6 +143,7 @@ static InterpretResult run() {
             case OP_MULTIPLY:
                 BINARY_OP(NUMBER_VAL, *);
                 break;
+
             case OP_DIVIDE:
                 BINARY_OP(NUMBER_VAL, /);
                 break;
@@ -170,6 +176,38 @@ static InterpretResult run() {
                 }
                 break;
 
+            case OP_DEFINE_GLOBAL: {
+                ObjString *name = READ_STRING();
+                Value      temp = NUMBER_VAL(1);
+
+                if (tableGet(&vm.globals, name, &temp)) {
+                    tableOverwrite(&vm.globals, name, peek(0));
+                } else {
+                    tableSet(&vm.globals, name, peek(0));
+                }
+
+                pop();
+                break;
+            }
+
+            case OP_SET_LOCAL: {
+                u8 slot        = READ_BYTE();
+                vm.stack[slot] = peek(0);
+                break;
+            }
+
+            case OP_SET_GLOBAL: {
+                ObjString *name = READ_STRING();
+
+                if (tableSet(&vm.globals, name, peek(0))) {
+                    tableDelete(&vm.globals, name);
+                    runtimeError("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                break;
+            }
+
             case OP_EQUAL: {
                 Value b = pop();
                 Value a = pop();
@@ -189,6 +227,29 @@ static InterpretResult run() {
                 push(BOOL_VAL(false));
                 break;
 
+            case OP_POP:
+                pop();
+                break;
+
+            case OP_GET_LOCAL: {
+                u8 slot = READ_BYTE();
+                push(vm.stack[slot]);
+                break;
+            }
+
+            case OP_GET_GLOBAL: {
+                ObjString *name = READ_STRING();
+                Value      value;
+
+                if (!tableGet(&vm.globals, name, &value)) {
+                    runtimeError("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                push(value);
+                break;
+            }
+
             case OP_NOT:
                 push(BOOL_VAL(isFalsey(pop())));
                 break;
@@ -203,19 +264,25 @@ static InterpretResult run() {
                 break;
             }
 
-            case OP_RETURN: {
+            case OP_PRINT: {
                 printValue(pop());
                 printf("\n");
+                break;
+            }
+
+            case OP_RETURN: {
                 return INTERPRET_OK;
             }
         }
     }
 }
+
+#undef READ_STRING
 #undef BINARY_OP
 #undef READ_BYTE
 #undef READ_CONSTANT
 
-InterpretResult interpret(const char* source) {
+InterpretResult interpret(const char *source) {
     Chunk chunk;
     initChunk(&chunk);
 

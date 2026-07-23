@@ -29,14 +29,14 @@
 #include "common.h"
 
 typedef struct {
-    const char* start;
-    const char* curr;
+    const char *start;
+    const char *curr;
     int         line;
 } Scanner;
 
 Scanner scanner;
 
-void initScanner(const char* source) {
+void initScanner(const char *source) {
     scanner.start = source;
     scanner.curr  = source;
     scanner.line  = 1;
@@ -81,7 +81,7 @@ static Token makeToken(TokenType type) {
     return token;
 }
 
-static Token errorToken(const char* message) {
+static Token errorToken(const char *message) {
     Token token;
     token.type  = TOKEN_ERROR;
     token.start = message;
@@ -118,7 +118,7 @@ static void skipWhitespace() {
     }
 }
 
-static TokenType checkKeyword(int start, int len, const char* rest,
+static TokenType checkKeyword(int start, int len, const char *rest,
                               TokenType type) {
     if (scanner.curr - scanner.start == start + len &&
         memcmp(scanner.start + start, rest, len) == 0) {
@@ -211,7 +211,6 @@ static Token string() {
     advance();
     return makeToken(TOKEN_STRING);
 }
-
 Token scanToken() {
     skipWhitespace();
     scanner.start = scanner.curr;
