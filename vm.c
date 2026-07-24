@@ -15,7 +15,10 @@
  * `OP_NOT` pop and push, and `OP_RETURN` halts. Variable opcodes read and
  * write locals by stack slot (`OP_GET_LOCAL`/`OP_SET_LOCAL`) or globals via
  * the `vm.globals` hash table (`OP_GET_GLOBAL`, `OP_DEFINE_GLOBAL`,
- * `OP_SET_GLOBAL`). `OP_PRINT` pops a value and prints it.
+ * `OP_SET_GLOBAL`). `OP_PRINT` pops a value and prints it. The jump
+ * instructions (`OP_JUMP`, `OP_JUMP_IF_FALSE`, and `OP_LOOP`) manipulate the
+ * instruction pointer by a signed 16-bit offset to implement `if`/`else`,
+ * `while`, `for`, and short-circuiting logical operators.
  *
  * Operand types are checked at runtime; a mismatch raises a runtime error
  * via `runtimeError()` and aborts interpretation.
@@ -108,6 +111,8 @@ static void concatenate() {
 #define READ_BYTE() (*vm.ip++)
 
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+
+#define READ_SHORT() (vm.ip += 2, (u16)((vm.ip[-2] << 8) | vm.ip[-1]))
 
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 
@@ -274,6 +279,24 @@ static InterpretResult run() {
                 break;
             }
 
+            case OP_JUMP: {
+                u16 offset = READ_SHORT();
+                vm.ip += offset;
+                break;
+            }
+
+            case OP_JUMP_IF_FALSE: {
+                u16 offset = READ_SHORT();
+                if (isFalsey(peek(0))) vm.ip += offset;
+                break;
+            }
+
+            case OP_LOOP: {
+                u16 offset = READ_SHORT();
+                vm.ip -= offset;
+                break;
+            }
+
             case OP_RETURN: {
                 return INTERPRET_OK;
             }
@@ -284,6 +307,7 @@ static InterpretResult run() {
 #undef READ_STRING
 #undef BINARY_OP
 #undef READ_BYTE
+#undef READ_SHORT
 #undef READ_CONSTANT
 
 InterpretResult interpret(const char *source) {

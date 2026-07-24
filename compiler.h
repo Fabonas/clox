@@ -10,8 +10,9 @@
  *
  * The compiler turns a source string into bytecode in a chunk. It implements a
  * single-pass Pratt parser (chapter 17) that compiles expressions, statements,
- * and variable declarations (chapters 21–22). On success the chunk is ready for
- * the VM; on failure it returns `false` and the caller discards the chunk.
+ * variable declarations (chapters 21–22), and control-flow statements
+ * (chapter 23). On success the chunk is ready for the VM; on failure it
+ * returns `false` and the caller discards the chunk.
  */
 
 #ifndef clox_compiler_h

@@ -10,7 +10,8 @@
  *
  * The disassembler renders a `Chunk` as human-readable text: each
  * instruction on its own line, with its byte offset, source line, opcode
- * name, and (for `OP_CONSTANT`) the constant value. It is used both
+ * name, and (for `OP_CONSTANT`) the constant value or (for jump
+ * instructions) the target offset. It is used both
  * interactively (for inspecting compiled output) and by the VM when
  * `DEBUG_TRACE_EXECUTION` is on.
  */

@@ -7,13 +7,14 @@ bytecode chunk and runs it on a stack-based interpreter — the same strategy
 used by Lua, Python, and the JVM.
 
 This is an educational project, worked through chapter by chapter. It
-currently implements everything through **Chapter 22 — Local Variables**.
+currently implements everything through **Chapter 23 — Jumping Back and
+Forth**.
 
 ---
 
 ## Current state
 
-Done (Crafting Interpreters chapters 14–22):
+Done (Crafting Interpreters chapters 14–23):
 
 - **Scanner** (ch 16) — hand-written lexer producing a token stream.
 - **Bytecode chunks** (ch 14) — growable opcode array, a parallel array of
@@ -35,12 +36,14 @@ Done (Crafting Interpreters chapters 14–22):
   VM stack, shadowing, and a compile-time stack-slot allocator.
 - **Statements** (ch 21–22) — `print`, expression statements, `var`
   declarations, and brace-delimited blocks with nested scope.
+- **Control flow** (ch 23) — `if`/`else`, `while`, `for`, short-circuiting
+  `and`/`or`, and the jump/loop bytecode instructions that implement them.
 
 Everything builds cleanly with `make` and runs. The REPL reads whole
 statements per line (use `;` and `{}` when needed).
 
-Not yet done: control flow (`if`/`while`/`for`), functions, closures,
-resolvers, and classes (chapters 23–28).
+Not yet done: functions, closures, resolvers, garbage collection, classes,
+and instances (chapters 24–28).
 
 ## Quick start
 
@@ -74,6 +77,14 @@ hello, world!
 > print a;
 Undefined variable 'a'.
 [line 1] in script
+> var i = 0; while (i < 3) { print i; i = i + 1; }
+0
+1
+2
+> for (var j = 0; j < 3; j = j + 1) print j;
+0
+1
+2
 ```
 
 ## Architecture
@@ -127,6 +138,9 @@ Makefile        build / run / release / clean / backup targets
 | `OP_NEGATE`        | —       | `a -> -a`               | numeric negation                            |
 | `OP_NOT`           | —       | `a -> !a`               | logical not (falsey -> true)                |
 | `OP_PRINT`         | —       | `a -> `                 | pop and print value with newline            |
+| `OP_JUMP`          | offset  | `... -> ...`            | unconditional 16-bit forward jump           |
+| `OP_JUMP_IF_FALSE` | offset  | `cond -> `              | pop condition; jump forward if falsey       |
+| `OP_LOOP`          | offset  | `... -> ...`            | unconditional 16-bit backward jump          |
 | `OP_RETURN`        | —       | `a -> `                 | pop and halt                                |
 
 The compiler desugars the comparison operators that have no dedicated
@@ -136,6 +150,13 @@ value types (different types are always unequal); `OP_GREATER`/`OP_LESS`
 and numeric arithmetic opcodes require numbers and trap with a runtime error
 otherwise. `OP_NOT` treats `nil` and `false` as falsey and everything else
 (including `0`) as truthy.
+
+Control flow is compiled with explicit 16-bit jump offsets. `OP_JUMP` is
+used for the unconditional branch around an `else` block or out of a loop;
+`OP_JUMP_IF_FALSE` implements conditional branches for `if` conditions and
+the left-hand side of short-circuiting `and`/`or`; `OP_LOOP` jumps backward
+to the top of a `while`/`for` body. `and` and `or` are compiled as
+short-circuit jumps rather than stack operators.
 
 ## Debug tracing
 
@@ -175,7 +196,7 @@ To silence it, comment out the two `#define`s in `common.h` and rebuild.
 - [x] Hash tables (ch 20)
 - [x] Global variables (ch 21)
 - [x] Local variables and block scope (ch 22)
-- [ ] Jumping back and forth: `if`, `while`, `for` (ch 23)
+- [x] Jumping back and forth: `if`/`else`, `while`, `for`, `and`/`or` (ch 23)
 - [ ] Functions and closures (ch 24–25)
 - [ ] Garbage collection, classes, instances, methods (ch 26–28)
 

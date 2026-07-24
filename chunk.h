@@ -13,8 +13,8 @@
  * arrays of equal length:
  *
  *   * `code`      — the raw bytecode, a sequence of opcodes (and, for some,
- *                    trailing operand bytes that index the constant pool or
- *                    name a local stack slot).
+ *                    trailing operand bytes that index the constant pool,
+ *                    name a local stack slot, or encode a 16-bit jump offset).
  *   * `lines`     — the source line number for each byte of code, used only
  *                    by the disassembler to attribute instructions to source
  *                    lines. Keeping it separate from `code` keeps the hot
@@ -52,6 +52,9 @@ typedef enum {
     OP_RETURN,
     OP_NEGATE,
     OP_PRINT,
+    OP_JUMP,
+    OP_JUMP_IF_FALSE,
+    OP_LOOP,
     OP_ADD,
     OP_SUBTRACT,
     OP_MULTIPLY,

@@ -68,6 +68,11 @@ BACKUP_DIR := $(BACKUP_ROOT)/$(NAME)
 endif
 
 backup:
+	@if [ -d "$(BACKUP_DIR)" ]; then \
+		echo "Error: backup already exists at $(BACKUP_DIR)/"; \
+		echo "       use 'make restore' to restore it or 'make clear-backup' to remove it"; \
+		exit 1; \
+	fi
 	@mkdir -p $(BACKUP_DIR)
 	@cp $(SRC_DIR)/*.c $(SRC_DIR)/*.h $(BACKUP_DIR)/
 	@echo "Backup saved to $(BACKUP_DIR)/"
